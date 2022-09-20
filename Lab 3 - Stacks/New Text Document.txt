@@ -1,0 +1,67 @@
+float infix_evaluation(char *inFix)
+{
+    ////////////////////////////step 1: infix to postfix////////////////////////////
+    //Parsing the string
+    char postFix[200];
+    int postFixCounter = 0;
+    stack stackable_ops;
+    for (int i = 0; *(inFix + i) != '\0'; i++){
+        if (!isOperator(*(inFix + i)))
+            postFix[postFixCounter++] = *(inFix + i);
+        else{
+            if (isEmptyStack(stackable_ops)) Push(&stackable_ops, (float)(*(inFix + i)));
+            else{
+                char topChar;
+                float topFloat;
+                Top(stackable_ops, &topFloat);
+                topChar = (char)topFloat;
+                if (stackable(*(inFix + i), topChar)){
+                    if (*(inFix + i) == ')') Pop(&stackable_ops);
+                    else Push(&stackable_ops, (float)(*(inFix + i)));
+                }
+                else{
+                    postFix[postFixCounter++] = topChar;
+                    Pop(&stackable_ops);
+                    i--;
+                }
+            }
+        }
+    }
+    while (!isEmptyStack(stackable_ops)){
+        float topFloat;
+        Top(stackable_ops, &topFloat);
+        Pop(&stackable_ops);
+        postFix[postFixCounter++] = (char)topFloat;
+    }
+    postFix[postFixCounter] = '\0';
+
+    //step 2: postfix to evaluation
+    stackable_ops = CreateStack();
+    float answer;
+    for (int i =0; *(postFix + i) != '\0'; i++){
+        char currentChar = *(postFix + i);
+        if (!isOperator(currentChar)) 
+            Push(&stackable_ops, (float)(currentChar - '0'));
+        else if (currentChar == '#'){
+            Top(stackable_ops, &answer);
+            Pop(&stackable_ops);
+            Push(&stackable_ops, -answer);
+        }
+        else{
+            float a, b;
+            Top(stackable_ops, &b);
+            Pop(&stackable_ops);
+            Top(stackable_ops, &a);
+            Pop(&stackable_ops);
+
+            if (currentChar == '+') answer = a + b;
+            else if (currentChar == '-') answer = a - b;
+            else if (currentChar == '*') answer = a * b;
+            else if (currentChar == '/') answer = a / b;
+            else if (currentChar == '^') answer = pow(a, b);
+            Push(&stackable_ops, answer);
+        }
+    }
+    Top(stackable_ops, &answer);
+    return answer;
+}

@@ -1,0 +1,40 @@
+ExpressionTree Build(char *postfix)
+{
+    if (postfix == NULL || *postfix == '\0') return Construct(0, NULL, NULL);
+    
+    stack s = CreateStack();
+    element temp1, temp2;
+    for (int i = 0; *(postfix + i) != '\0'; i++){
+        if (is_digit(*(postfix + i)))
+            Push(&s, Construct(*(postfix + i), NULL, NULL));//push the number a leaf node into the stack
+        else{
+            if (*(postfix + i) == '#'){//The only unary operator, #, pull one node and return it with the number in the negative
+                Top(s, &temp1);
+                Pop(&s);
+                Push(&s, Construct(*(postfix + i), NULL, temp1));
+                //Push the child to the right of #
+            }
+            else{//In case of bianry operator, pull two nodes from the stack, and push the current node, with the pulled two as its children
+                Top(s, &temp1);
+                Pop(&s);
+                Top(s, &temp2);
+                Pop(&s);
+                Push(&s, Construct(*(postfix + i), temp2, temp1));
+                //Push temp1 to the right node, and temp2 to the left node
+            }
+        }
+    }
+    Top(s, &temp1);//get the final result in temp1
+    return temp1;
+}
+
+
+float result(ExpressionTree B)
+{
+    if (B == NULL) return 0;
+    if (B->left == NULL){
+        if (B->right == NULL) return to_digit(B->data);//In this case this is a leaf node containing a number
+        else return operation (0, B->data, result(B->right));//In this case it is the unary operator #
+    }
+    return operation(result(B->left), B->data, result(B->right));//If none of the above then it is a binary operator
+}
